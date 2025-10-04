@@ -6,6 +6,8 @@ import 'package:flutter_treemap/src/treemap.dart';
 class FlutterTreemap extends StatefulWidget {
   final List<Treemap> nodes;
   final double minTileRatio;
+  final bool showTitle;
+  final bool showValue;
   final Function(int)? onTap;
 
   const FlutterTreemap({
@@ -13,6 +15,8 @@ class FlutterTreemap extends StatefulWidget {
     required this.nodes,
     this.onTap,
     this.minTileRatio = 0.02,
+    this.showTitle = true,
+    this.showValue = true,
   });
 
   @override
@@ -213,16 +217,6 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
     return aspect * (aspect > 2 ? 1.5 : 1.0); // Penalize extreme aspect ratios
   }
 
-  Color getRandomColor() {
-    final Random random = Random();
-    return Color.fromARGB(
-      255,
-      random.nextInt(256),
-      random.nextInt(256),
-      random.nextInt(256),
-    );
-  }
-
   Widget _buildTile({
     required Treemap node,
     required Rect rect,
@@ -236,40 +230,39 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
       width: rect.width,
       height: rect.height,
       decoration: BoxDecoration(
-        color: node.color ?? getRandomColor(),
+        color: node.color,
         border: Border.all(color: Colors.white),
       ),
-      child: Center(
-        child: Padding(
-          padding: EdgeInsetsGeometry.all(2),
-          child: Column(
-            children: [
-              if (textHeight < rect.height)
-                Text(
-                  node.title,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
-                  ),
-                ),
-              if ((2 * textHeight) < rect.height)
-                Text(
-                  node.value.toString(),
-                  textAlign: TextAlign.center,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    height: 1.2,
-                  ),
-                ),
-            ],
-          ),
-        ),
+      padding: EdgeInsetsGeometry.all(2),
+      alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (textHeight < rect.height)
+            Text(
+              node.title,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+            ),
+          if ((2 * textHeight) < rect.height)
+            Text(
+              node.value.toString(),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+                height: 1.2,
+              ),
+            ),
+          if (node.child != null) node.child!,
+        ],
       ),
     );
   }
