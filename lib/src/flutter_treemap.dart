@@ -223,7 +223,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
     required int index,
   }) {
     double fontSize = min(rect.width, rect.height) * 0.3;
-    fontSize = fontSize.clamp(6, 12);
+    fontSize = fontSize.clamp(6, 16);
 
     double textHeight = 12 * 1.2;
     return Container(
@@ -244,7 +244,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
               textAlign: TextAlign.center,
               maxLines: 1,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w600,
                 height: 1.2,
               ),
@@ -256,7 +256,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w400,
                 height: 1.2,
               ),
