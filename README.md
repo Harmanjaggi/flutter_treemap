@@ -4,7 +4,7 @@ A Flutter widget for creating beautiful and interactive treemap visualizations. 
 
 This package uses a squarified algorithm to generate layouts with optimal aspect ratios, making the chart easy to read and visually appealing.
 
-![Example Treemap 1](https://raw.githubusercontent.com/Harmanjaggi/flutter_treemap/refs/heads/main/example/assets/treemap_example1.png?token=GHSAT0AAAAAADLESDLGCTOOX7G3VW3H2Y3S2HCJKRQ)
+![Example Treemap 1](https://github.com/Harmanjaggi/flutter_treemap/blob/main/example/assets/treemap_example1.png?raw=true)
 
 ## Features
 * Proportional Sizing: Rectangle sizes are directly proportional to their data values.
