@@ -11,7 +11,15 @@ class FlutterTreemap extends StatefulWidget {
   final TextStyle? labelStyle;
   final TextStyle? valueStyle;
   final EdgeInsetsGeometry tilePadding;
-  final Function(int index)? onTap;
+  final BoxBorder? border;
+  final Widget Function(
+    BuildContext context,
+    Widget child,
+    Treemap node,
+    int index,
+    Rect rect,
+  )?
+  tileWrapper;
   final Widget Function(
     BuildContext context,
     Treemap node,
@@ -23,14 +31,15 @@ class FlutterTreemap extends StatefulWidget {
   const FlutterTreemap({
     super.key,
     required this.nodes,
-    this.onTap,
     this.minTileRatio = 0.02,
     this.showLabel = true,
     this.showValue = true,
     this.labelStyle,
     this.valueStyle,
     this.tilePadding = const EdgeInsets.all(2),
+    this.border,
     this.tileBuilder,
+    this.tileWrapper,
   });
 
   @override
@@ -75,14 +84,23 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
                   top: rect.top,
                   width: rect.width,
                   height: rect.height,
-                  child: GestureDetector(
-                    onTap: () => widget.onTap?.call(widget.nodes.indexOf(node)),
-                    child: _buildTile(
-                      node: node,
-                      rect: rect,
-                      index: widget.nodes.indexOf(node),
-                    ),
-                  ),
+                  child:
+                      widget.tileWrapper?.call(
+                        context,
+                        _buildTile(
+                          node: node,
+                          rect: rect,
+                          index: widget.nodes.indexOf(node),
+                        ),
+                        node,
+                        widget.nodes.indexOf(node),
+                        rect,
+                      ) ??
+                      _buildTile(
+                        node: node,
+                        rect: rect,
+                        index: widget.nodes.indexOf(node),
+                      ),
                 );
               })
               .whereType<Widget>()
@@ -232,12 +250,19 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
     required int index,
   }) {
     if (widget.tileBuilder != null) {
-      return widget.tileBuilder!(context, node, index, rect);
+      return Container(
+        width: rect.width,
+        height: rect.height,
+        decoration: BoxDecoration(color: node.color, border: widget.border),
+        padding: widget.tilePadding,
+        alignment: Alignment.center,
+        child: widget.tileBuilder!(context, node, index, rect),
+      );
     }
     double fontSize = min(rect.width, rect.height) * 0.3;
     fontSize = fontSize.clamp(6, 16);
 
-    Size measureTextSize(
+    double measureTextSize(
       TextStyle style, {
       int maxLines = 1,
       double maxWidth = double.infinity,
@@ -246,9 +271,8 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
         text: TextSpan(text: "Np", style: style),
         maxLines: maxLines,
         textDirection: TextDirection.ltr,
-      )..layout(minWidth: 0, maxWidth: maxWidth);
-
-      return textPainter.size;
+      )..layout();
+      return textPainter.size.height;
     }
 
     double labelHeight = measureTextSize(
@@ -258,7 +282,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
             fontWeight: FontWeight.w600,
             height: 1.2,
           ),
-    ).height;
+    );
     double valueHeight = measureTextSize(
       widget.valueStyle ??
           TextStyle(
@@ -266,14 +290,11 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
             fontWeight: FontWeight.w400,
             height: 1.2,
           ),
-    ).height;
+    );
     return Container(
       width: rect.width,
       height: rect.height,
-      decoration: BoxDecoration(
-        color: node.color,
-        border: Border.all(color: Colors.white),
-      ),
+      decoration: BoxDecoration(color: node.color, border: widget.border),
       padding: widget.tilePadding,
       alignment: Alignment.center,
       child: Column(
@@ -281,7 +302,11 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
         children: [
           if (widget.showLabel &&
               (node.label != null) &&
-              (labelHeight < (rect.height - widget.tilePadding.vertical)))
+              (labelHeight <
+                  (rect.height -
+                      widget.tilePadding.vertical -
+                      (widget.border?.top.width ?? 0) -
+                      (widget.border?.bottom.width ?? 0))))
             Text(
               node.label!,
               textAlign: TextAlign.center,
@@ -297,7 +322,10 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
             ),
           if (widget.showValue &&
               ((labelHeight + valueHeight) <
-                  (rect.height - widget.tilePadding.vertical)))
+                  (rect.height -
+                      widget.tilePadding.vertical -
+                      (widget.border?.top.width ?? 0) -
+                      (widget.border?.bottom.width ?? 0))))
             Text(
               node.value.toString(),
               textAlign: TextAlign.center,
