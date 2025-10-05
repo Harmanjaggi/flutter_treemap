@@ -5,14 +5,13 @@ A Flutter widget for creating beautiful and interactive treemap visualizations. 
 This package uses a squarified algorithm to generate layouts with optimal aspect ratios, making the chart easy to read and visually appealing.
 
 ## Features
-
-- Proportional Sizing: Rectangle sizes are directly proportional to their data values.
-- Squarified Layout: Generates a layout with rectangles that are as close to square as possible for better readability.
-- Highly Customizable:
- - Control the visibility and style of labels and values.
- - Add padding and borders to individual tiles.
-- Custom Tile Builders: Use the tileBuilder for complete control over the appearance of each tile.
-- Interactive Wrappers: Use the tileWrapper to add gestures (onTap, onHover), Tooltips, or any other wrapping widget to the tiles.
+* Proportional Sizing: Rectangle sizes are directly proportional to their data values.
+* Squarified Layout: Generates a layout with rectangles that are as close to square as possible for better readability.
+* Highly Customizable:
+    * Control the visibility and style of labels and values.
+    * Add padding and borders to individual tiles.
+* Custom Tile Builders: Use the `tileBuilder` for complete control over the appearance of each tile.
+* Interactive Wrappers: Use the `tileWrapper` to add gestures (`onTap`, `onHover`), `Tooltips`, or any other wrapping widget to the tiles.
 
 ## Getting Started
 
@@ -37,8 +36,10 @@ import 'package:flutter_treemap/flutter_treemap.dart';
 
 ## Usage
 
-###Basic Example
-To create a simple treemap, provide a list of `Treemap` objects to the `FlutterTreemap` widget. Each `Treemap` object must have a `value` (which determines its size) and a `title`.
+### Basic Example
+Create a `FlutterTreemap` widget and provide it with a list of `Treemap` nodes. Each node requires a `value` and can have an optional `label`.
+
+![Example Treemap 1](https://raw.githubusercontent.com/Harmanjaggi/flutter_treemap/main/example/assets/treemap_example1.png)
 ```Dart
 import 'package:flutter/material.dart';
 import 'package:flutter_treemap/flutter_treemap.dart';
@@ -77,8 +78,9 @@ You can easily customize the treemap's appearance and add interactivity.
 
 ### Interactive Tiles and Custom Content
 
-Use the tileWrapper to make tiles interactive (e.g., show a tooltip or handle taps) and the tileBuilder to define custom content for each tile.
+Use the `tileWrapper` to make tiles interactive (e.g., show a tooltip or handle taps) and the `tileBuilder` to define custom content for each tile.
 
+![Example Treemap 1](https://raw.githubusercontent.com/Harmanjaggi/flutter_treemap/main/example/assets/treemap_example2.png)
 ```Dart
 import 'package:flutter/material.dart';
 import 'package:flutter_treemap/flutter_treemap.dart';
@@ -159,14 +161,11 @@ class CustomizedTreemap extends StatelessWidget {
 | `tileWrapper`  | `Function?`         | A wrapper `(context, child, node, index, rect)` for the tile, useful for gesture detection. |
 
 ### `Treemap` Class
-
 | Property | Type      | Description                                                                     |
 | :------- | :-------- | :------------------------------------------------------------------------------ |
 | `value`  | `double`  | **Required**. The value that determines the area of the tile.                   |
 | `label`  | `String?` | The label to be displayed on the tile.                                          |
 | `color`  | `Color`   | The background color of the tile. A random light color is used if not provided. |
-
-
 
 ## Contributing
 
