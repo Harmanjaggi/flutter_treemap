@@ -2,12 +2,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class Treemap {
-  String title;
   double value;
-  Widget? child;
+  String? label;
   Color color;
 
-  Treemap({required this.title, required this.value, this.child, Color? color})
+  Treemap({required this.value, this.label, Color? color})
     : color = color ?? _getRandomColor();
 
   static Color _getRandomColor() {

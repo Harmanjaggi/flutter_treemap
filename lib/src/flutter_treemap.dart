@@ -6,17 +6,31 @@ import 'package:flutter_treemap/src/treemap.dart';
 class FlutterTreemap extends StatefulWidget {
   final List<Treemap> nodes;
   final double minTileRatio;
-  final bool showTitle;
+  final bool showLabel;
   final bool showValue;
-  final Function(int)? onTap;
+  final TextStyle? labelStyle;
+  final TextStyle? valueStyle;
+  final EdgeInsetsGeometry tilePadding;
+  final Function(int index)? onTap;
+  final Widget Function(
+    BuildContext context,
+    Treemap node,
+    int index,
+    Rect rect,
+  )?
+  tileBuilder;
 
   const FlutterTreemap({
     super.key,
     required this.nodes,
     this.onTap,
     this.minTileRatio = 0.02,
-    this.showTitle = true,
+    this.showLabel = true,
     this.showValue = true,
+    this.labelStyle,
+    this.valueStyle,
+    this.tilePadding = const EdgeInsets.all(2),
+    this.tileBuilder,
   });
 
   @override
@@ -33,11 +47,6 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
       return sum + node.value;
     });
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -214,7 +223,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
     double breadth = horizontal ? rect.height : rect.width;
     if (length == 0 || breadth == 0) return double.infinity;
     double aspect = max(length / breadth, breadth / length);
-    return aspect * (aspect > 2 ? 1.5 : 1.0); // Penalize extreme aspect ratios
+    return aspect * (aspect > 2 ? 1.5 : 1.0);
   }
 
   Widget _buildTile({
@@ -222,10 +231,42 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
     required Rect rect,
     required int index,
   }) {
+    if (widget.tileBuilder != null) {
+      return widget.tileBuilder!(context, node, index, rect);
+    }
     double fontSize = min(rect.width, rect.height) * 0.3;
     fontSize = fontSize.clamp(6, 16);
 
-    double textHeight = 12 * 1.2;
+    Size measureTextSize(
+      TextStyle style, {
+      int maxLines = 1,
+      double maxWidth = double.infinity,
+    }) {
+      final TextPainter textPainter = TextPainter(
+        text: TextSpan(text: "Np", style: style),
+        maxLines: maxLines,
+        textDirection: TextDirection.ltr,
+      )..layout(minWidth: 0, maxWidth: maxWidth);
+
+      return textPainter.size;
+    }
+
+    double labelHeight = measureTextSize(
+      widget.labelStyle ??
+          TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w600,
+            height: 1.2,
+          ),
+    ).height;
+    double valueHeight = measureTextSize(
+      widget.valueStyle ??
+          TextStyle(
+            fontSize: fontSize,
+            fontWeight: FontWeight.w400,
+            height: 1.2,
+          ),
+    ).height;
     return Container(
       width: rect.width,
       height: rect.height,
@@ -233,35 +274,43 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
         color: node.color,
         border: Border.all(color: Colors.white),
       ),
-      padding: EdgeInsetsGeometry.all(2),
+      padding: widget.tilePadding,
       alignment: Alignment.center,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (textHeight < rect.height)
+          if (widget.showLabel &&
+              (node.label != null) &&
+              (labelHeight < (rect.height - widget.tilePadding.vertical)))
             Text(
-              node.title,
+              node.label!,
               textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
               maxLines: 1,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w600,
-                height: 1.2,
-              ),
+              style:
+                  widget.labelStyle ??
+                  TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                  ),
             ),
-          if ((2 * textHeight) < rect.height)
+          if (widget.showValue &&
+              ((labelHeight + valueHeight) <
+                  (rect.height - widget.tilePadding.vertical)))
             Text(
               node.value.toString(),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w400,
-                height: 1.2,
-              ),
+              style:
+                  widget.valueStyle ??
+                  TextStyle(
+                    fontSize: fontSize,
+                    fontWeight: FontWeight.w400,
+                    height: 1.2,
+                  ),
             ),
-          if (node.child != null) node.child!,
         ],
       ),
     );
