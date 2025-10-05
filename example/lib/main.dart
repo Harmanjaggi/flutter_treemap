@@ -31,15 +31,15 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     // Sample data nodes for the treemap
     List<Treemap> nodes = [
-      Treemap(value: 20, label: 'Node 1'),
-      Treemap(value: 1, label: 'Node 2'),
-      Treemap(value: 50, label: 'Node 3'),
-      Treemap(value: 30, label: 'Node 4'),
-      Treemap(value: 11, label: 'Node 5'),
-      Treemap(value: 20, label: 'Node 6'),
+      Treemap(value: 50, label: 'Node 1'),
+      Treemap(value: 40, label: 'Node 2'),
+      Treemap(value: 30, label: 'Node 3'),
+      Treemap(value: 20, label: 'Node 4'),
+      Treemap(value: 20, label: 'Node 5'),
+      Treemap(value: 11, label: 'Node 6'),
       Treemap(value: 10, label: 'Node 7'),
       Treemap(value: 5, label: 'Node 8'),
-      Treemap(value: 40, label: 'Node 9'),
+      Treemap(value: 1, label: 'Node 9'),
     ];
 
     return Scaffold(
