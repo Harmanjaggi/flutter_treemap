@@ -1,12 +1,13 @@
 # Flutter Treemap
+[![pub package](https://img.shields.io/pub/v/flutter_treemap.svg)](https://pub.dev/packages/flutter_treemap)
 
-A Flutter widget for creating beautiful and interactive treemap visualizations. Treemaps display hierarchical data as a set of nested rectangles, where the area of each rectangle is proportional to its value.
+A Flutter widget for creating interactive and customizable treemap visualizations. Display hierarchical data with proportional tiles, custom builders, and gesture support.
 
 This package uses a squarified algorithm to generate layouts with optimal aspect ratios, making the chart easy to read and visually appealing.
-
 ![Example Treemap 1](https://github.com/Harmanjaggi/flutter_treemap/blob/main/example/assets/treemap_example1.png?raw=true)
 
 ## Features
+
 * Proportional Sizing: Rectangle sizes are directly proportional to their data values.
 * Squarified Layout: Generates a layout with rectangles that are as close to square as possible for better readability.
 * Highly Customizable:
@@ -19,20 +20,20 @@ This package uses a squarified algorithm to generate layouts with optimal aspect
 
 ### Installation
 Add this to your package's `pubspec.yaml` file:
-```YAML
+```yaml
 dependencies:
   flutter_treemap: ^1.0.0
 ```
 
 Then, install the package from your terminal:
 
-```SHELL
+```shell
 flutter pub get
 ```
 
 ### Import the package
 Now, import the package in your Dart code:
-```DART
+```dart
 import 'package:flutter_treemap/flutter_treemap.dart';
 ```
 
@@ -41,7 +42,7 @@ import 'package:flutter_treemap/flutter_treemap.dart';
 ### Basic Example
 Create a `FlutterTreemap` widget and provide it with a list of `Treemap` nodes. Each node requires a `value` and can have an optional `label`.
 
-```Dart
+```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_treemap/flutter_treemap.dart';
 
@@ -81,7 +82,7 @@ You can easily customize the treemap's appearance and add interactivity.
 
 Use the `tileWrapper` to make tiles interactive (e.g., show a tooltip or handle taps) and the `tileBuilder` to define custom content for each tile.
 
-```Dart
+```dart
 import 'package:flutter/material.dart';
 import 'package:flutter_treemap/flutter_treemap.dart';
 
@@ -150,15 +151,15 @@ class CustomizedTreemap extends StatelessWidget {
 | Property       | Type                | Description                                                                          |
 | :------------- | :------------------ | :----------------------------------------------------------------------------------- |
 | `nodes`        | `List<Treemap>`     | **Required**. The list of data nodes to display.                                     |
-| `minTileRatio` | `double`            | Minimum area a tile can occupy as a percentage of the total. Defaults to `0.02`.     |
+| `minTileRatio` | `double`            | Minimum area a tile can occupy as a percentage of the total. Defaults to `0.02%`.     |
 | `showLabel`    | `bool`              | Whether to display the default label on the tile. Defaults to `true`.                |
 | `showValue`    | `bool`              | Whether to display the default value on the tile. Defaults to `true`.                |
 | `labelStyle`   | `TextStyle?`        | The text style for the default tile labels.                                          |
 | `valueStyle`   | `TextStyle?`        | The text style for the default tile values.                                          |
 | `tilePadding`  | `EdgeInsetsGeometry`| Padding applied inside each tile. Defaults to `EdgeInsets.all(2)`.                   |
 | `border`       | `BoxBorder?`        | A border to draw around each tile.                                                   |
-| `tileBuilder`  | `Function?`         | A custom builder `(context, node, index, rect)` for rendering a tile. Overrides the default. |
-| `tileWrapper`  | `Function?`         | A wrapper `(context, child, node, index, rect)` for the tile, useful for gesture detection. |
+| `tileBuilder`  | `Widget Function(BuildContext context, Treemap node, int index, Rect rect)?`| A custom builder `(context, node, index, rect)` for rendering a tile. Overrides the default. |
+| `tileWrapper`  | `Widget Function(BuildContext context, Treemap node, int index, Rect rect)?`| A wrapper `(context, child, node, index, rect)` for the tile, useful for gesture detection. |
 
 ### `Treemap` Class
 | Property | Type      | Description                                                                     |
@@ -170,5 +171,9 @@ class CustomizedTreemap extends StatelessWidget {
 ## Contributing
 
 Contributions are welcome! If you find any bugs or have feature requests, please file them at the [issue tracker].
+
+## License
+
+This project is licensed under the [GPL-3.0 License](LICENSE).
 
 [issue tracker]: https://github.com/Harmanjaggi/flutter_treemap/issues
