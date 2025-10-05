@@ -57,44 +57,39 @@ class FlutterTreemap extends StatefulWidget {
 }
 
 class _FlutterTreemapState extends State<FlutterTreemap> {
-  double totalWeight = 0;
-
-  /// Cache for computed rectangles to avoid recomputation
-  Map<Treemap, Rect>? _cachedRectangles;
-  Size? _lastSize;
-
-  @override
-  void initState() {
-    // Pre-compute total weight from all nodes
-    totalWeight = widget.nodes.fold(0.0, (sum, node) => sum + node.value.abs());
-    super.initState();
+  /// Utility to measure text height for overflow checks.
+  double _measureTextHeight(TextStyle style) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: "Np", style: style),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return textPainter.size.height;
   }
+
+  double totalWeight = 0;
 
   @override
   Widget build(BuildContext context) {
+    // Compute total weight dynamically on every build
+    totalWeight = widget.nodes.fold(0.0, (sum, node) => sum + node.value);
+
     if (totalWeight == 0 || widget.nodes.isEmpty) {
-      return const SizedBox.shrink();
+      return const SizedBox.shrink(); // No nodes → show empty widget
     }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = Size(constraints.maxWidth, constraints.maxHeight);
+        final rectangleMap = <Treemap, Rect>{};
 
-        // Recompute rectangles only if size or nodes changed
-        if (_cachedRectangles == null || _lastSize != size) {
-          final rectangleMap = <Treemap, Rect>{};
-          _squarify(
-            widget.nodes,
-            Rect.fromLTWH(0, 0, size.width, size.height),
-            rectangleMap,
-          );
-          _cachedRectangles = rectangleMap;
-          _lastSize = size;
-        }
+        // Compute treemap layout on every build (hot-restart safe)
+        _squarify(
+          widget.nodes,
+          Rect.fromLTWH(0, 0, constraints.maxWidth, constraints.maxHeight),
+          rectangleMap,
+        );
 
-        final rectangleMap = _cachedRectangles!;
-
-        // Use asMap() for index access instead of indexOf()
+        // Build tiles
         return Stack(
           clipBehavior: Clip.hardEdge,
           children: widget.nodes.asMap().entries.map((entry) {
@@ -280,16 +275,6 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
 
     // Penalize extreme aspect ratios more heavily
     return aspect * (aspect > 2 ? 1.5 : 1.0);
-  }
-
-  /// Utility to measure text height for overflow checks.
-  double _measureTextHeight(TextStyle style) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: "Np", style: style),
-      maxLines: 1,
-      textDirection: TextDirection.ltr,
-    )..layout();
-    return textPainter.size.height;
   }
 
   /// Builds a single treemap tile.
