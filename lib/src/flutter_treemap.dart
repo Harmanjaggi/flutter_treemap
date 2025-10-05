@@ -9,6 +9,8 @@ import 'package:flutter_treemap/src/treemap.dart';
 /// a squarified treemap algorithm for readability.
 class FlutterTreemap extends StatefulWidget {
   final List<Treemap> nodes;
+
+  /// [minTileRatio] keep it from 0 to 1
   final double minTileRatio;
   final bool showLabel;
   final bool showValue;
@@ -293,29 +295,11 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
         decoration: BoxDecoration(color: node.color, border: widget.border),
         padding: widget.tilePadding,
         alignment: Alignment.center,
-        child: widget.tileBuilder!(context, node, index, rect),
+        child: FittedBox(
+          child: widget.tileBuilder!(context, node, index, rect),
+        ),
       );
     }
-
-    double fontSize = min(rect.width, rect.height) * 0.3;
-    fontSize = fontSize.clamp(6, 16);
-
-    double labelHeight = _measureTextHeight(
-      widget.labelStyle ??
-          TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w600,
-            height: 1.2,
-          ),
-    );
-    double valueHeight = _measureTextHeight(
-      widget.valueStyle ??
-          TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w400,
-            height: 1.2,
-          ),
-    );
 
     return Container(
       width: rect.width,
@@ -323,52 +307,40 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
       decoration: BoxDecoration(color: node.color, border: widget.border),
       padding: widget.tilePadding,
       alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Show label if it fits in available height
-          if (widget.showLabel &&
-              (node.label != null) &&
-              (labelHeight <
-                  rect.height -
-                      widget.tilePadding.vertical -
-                      (widget.border?.top.width ?? 0) -
-                      (widget.border?.bottom.width ?? 0)))
-            Text(
-              node.label!,
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style:
-                  widget.labelStyle ??
-                  TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
-                  ),
-            ),
-
-          // Show value if label + value fit in available height
-          if (widget.showValue &&
-              ((labelHeight + valueHeight) <
-                  rect.height -
-                      widget.tilePadding.vertical -
-                      (widget.border?.top.width ?? 0) -
-                      (widget.border?.bottom.width ?? 0)))
-            Text(
-              node.value.toString(),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style:
-                  widget.valueStyle ??
-                  TextStyle(
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w400,
-                    height: 1.2,
-                  ),
-            ),
-        ],
+      child: FittedBox(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (widget.showLabel && (node.label != null))
+              Text(
+                node.label!,
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style:
+                    widget.labelStyle ??
+                    TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                    ),
+              ),
+            if (widget.showValue)
+              Text(
+                node.value.toString(),
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style:
+                    widget.valueStyle ??
+                    TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                      height: 1.2,
+                    ),
+              ),
+          ],
+        ),
       ),
     );
   }
