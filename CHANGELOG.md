@@ -1,3 +1,4 @@
-## 0.0.1
+# 1.0.0
 
-* TODO: Describe initial release.
+- Initial release of the flutter_treemap package.
+- Added Treemap widget with basic customization options.
