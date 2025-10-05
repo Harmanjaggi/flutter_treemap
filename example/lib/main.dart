@@ -29,19 +29,63 @@ class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<Treemap> nodes = [
-      Treemap(value: 20, title: 'Node 1'),
-      Treemap(value: 1, title: 'Node 2'),
-      Treemap(value: 50, title: 'Node 3'),
-      Treemap(value: 30, title: 'Node 4'),
-      Treemap(value: 11, title: 'Node 5'),
-      Treemap(value: 20, title: 'Node 6'),
-      Treemap(value: 10, title: 'Node 7'),
-      Treemap(value: 5, title: 'Node 8'),
-      Treemap(value: 40, title: 'Node 9'),
+      Treemap(value: 20, label: 'Node 1'),
+      Treemap(value: 1, label: 'Node 2'),
+      Treemap(value: 50, label: 'Node 3'),
+      Treemap(value: 30, label: 'Node 4'),
+      Treemap(value: 11, label: 'Node 5'),
+      Treemap(value: 20, label: 'Node 6'),
+      Treemap(value: 10, label: 'Node 7'),
+      Treemap(value: 5, label: 'Node 8'),
+      Treemap(value: 40, label: 'Node 9'),
     ];
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: FlutterTreemap(nodes: nodes, minTileRatio: 0.02),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 400,
+              child: FlutterTreemap(
+                nodes: nodes,
+                border: Border.all(color: Colors.white),
+              ),
+            ),
+            Text(
+              "Customized Tiles",
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            SizedBox(
+              height: 400,
+              child: FlutterTreemap(
+                nodes: nodes,
+                border: Border.all(color: Colors.white),
+                tileWrapper: (context, child, node, index, rect) {
+                  return Tooltip(
+                    message: '${node.label}\nValue: ${node.value}',
+                    child: child,
+                  );
+                },
+                tileBuilder: (context, node, index, rect) {
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        node.label ?? '',
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
