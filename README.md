@@ -4,6 +4,8 @@ A Flutter widget for creating beautiful and interactive treemap visualizations. 
 
 This package uses a squarified algorithm to generate layouts with optimal aspect ratios, making the chart easy to read and visually appealing.
 
+![Example Treemap 1](https://raw.githubusercontent.com/Harmanjaggi/flutter_treemap/refs/heads/main/example/assets/treemap_example1.png?token=GHSAT0AAAAAADLESDLGCTOOX7G3VW3H2Y3S2HCJKRQ)
+
 ## Features
 * Proportional Sizing: Rectangle sizes are directly proportional to their data values.
 * Squarified Layout: Generates a layout with rectangles that are as close to square as possible for better readability.
@@ -39,7 +41,6 @@ import 'package:flutter_treemap/flutter_treemap.dart';
 ### Basic Example
 Create a `FlutterTreemap` widget and provide it with a list of `Treemap` nodes. Each node requires a `value` and can have an optional `label`.
 
-![Example Treemap 1](https://raw.githubusercontent.com/Harmanjaggi/flutter_treemap/refs/heads/main/example/assets/treemap_example1.png?token=GHSAT0AAAAAADLESDLGCTOOX7G3VW3H2Y3S2HCJKRQ)
 ```Dart
 import 'package:flutter/material.dart';
 import 'package:flutter_treemap/flutter_treemap.dart';
@@ -80,7 +81,6 @@ You can easily customize the treemap's appearance and add interactivity.
 
 Use the `tileWrapper` to make tiles interactive (e.g., show a tooltip or handle taps) and the `tileBuilder` to define custom content for each tile.
 
-![Example Treemap 1](https://raw.githubusercontent.com/Harmanjaggi/flutter_treemap/refs/heads/main/example/assets/treemap_example1.png?token=GHSAT0AAAAAADLESDLGCTOOX7G3VW3H2Y3S2HCJKRQ)
 ```Dart
 import 'package:flutter/material.dart';
 import 'package:flutter_treemap/flutter_treemap.dart';
