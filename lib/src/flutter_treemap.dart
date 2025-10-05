@@ -1,8 +1,12 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_treemap/src/treemap.dart';
 
+/// A widget that displays a **Treemap visualization**.
+///
+/// Each [Treemap] node is represented as a rectangle sized
+/// proportionally to its `value`. The layout is generated using
+/// a squarified treemap algorithm for readability.
 class FlutterTreemap extends StatefulWidget {
   final List<Treemap> nodes;
   final double minTileRatio;
@@ -12,6 +16,9 @@ class FlutterTreemap extends StatefulWidget {
   final TextStyle? valueStyle;
   final EdgeInsetsGeometry tilePadding;
   final BoxBorder? border;
+
+  /// A wrapper around the built tile.
+  /// This allows adding extra functionality (e.g., onTap, onHover).
   final Widget Function(
     BuildContext context,
     Widget child,
@@ -20,6 +27,9 @@ class FlutterTreemap extends StatefulWidget {
     Rect rect,
   )?
   tileWrapper;
+
+  /// Custom builder for rendering tiles.
+  /// If null, a default text-based tile is created.
   final Widget Function(
     BuildContext context,
     Treemap node,
@@ -48,13 +58,15 @@ class FlutterTreemap extends StatefulWidget {
 
 class _FlutterTreemapState extends State<FlutterTreemap> {
   double totalWeight = 0;
-  bool addListenerAdded = false;
+
+  /// Cache for computed rectangles to avoid recomputation
+  Map<Treemap, Rect>? _cachedRectangles;
+  Size? _lastSize;
 
   @override
   void initState() {
-    totalWeight = widget.nodes.fold(0.0, (sum, node) {
-      return sum + node.value;
-    });
+    // Pre-compute total weight from all nodes
+    totalWeight = widget.nodes.fold(0.0, (sum, node) => sum + node.value.abs());
     super.initState();
   }
 
@@ -66,50 +78,58 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        Map<Treemap, Rect> rectangleMap = {};
-        _squarify(
-          widget.nodes,
-          Rect.fromLTWH(0, 0, constraints.maxWidth, constraints.maxHeight),
-          rectangleMap,
-        );
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
 
+        // Recompute rectangles only if size or nodes changed
+        if (_cachedRectangles == null || _lastSize != size) {
+          final rectangleMap = <Treemap, Rect>{};
+          _squarify(
+            widget.nodes,
+            Rect.fromLTWH(0, 0, size.width, size.height),
+            rectangleMap,
+          );
+          _cachedRectangles = rectangleMap;
+          _lastSize = size;
+        }
+
+        final rectangleMap = _cachedRectangles!;
+
+        // Use asMap() for index access instead of indexOf()
         return Stack(
           clipBehavior: Clip.hardEdge,
-          children: widget.nodes
-              .map((node) {
-                final rect = rectangleMap[node];
-                if (rect == null) return null;
-                return Positioned(
-                  left: rect.left,
-                  top: rect.top,
-                  width: rect.width,
-                  height: rect.height,
-                  child:
-                      widget.tileWrapper?.call(
-                        context,
-                        _buildTile(
-                          node: node,
-                          rect: rect,
-                          index: widget.nodes.indexOf(node),
-                        ),
-                        node,
-                        widget.nodes.indexOf(node),
-                        rect,
-                      ) ??
-                      _buildTile(
-                        node: node,
-                        rect: rect,
-                        index: widget.nodes.indexOf(node),
-                      ),
-                );
-              })
-              .whereType<Widget>()
-              .toList(),
+          children: widget.nodes.asMap().entries.map((entry) {
+            final index = entry.key;
+            final node = entry.value;
+            final rect = rectangleMap[node];
+            if (rect == null) return const SizedBox.shrink();
+
+            final builtTile = _buildTile(node: node, rect: rect, index: index);
+
+            return Positioned(
+              left: rect.left,
+              top: rect.top,
+              width: rect.width,
+              height: rect.height,
+              child:
+                  widget.tileWrapper?.call(
+                    context,
+                    builtTile,
+                    node,
+                    index,
+                    rect,
+                  ) ??
+                  builtTile,
+            );
+          }).toList(),
         );
       },
     );
   }
 
+  /// Recursive squarified treemap layout algorithm.
+  ///
+  /// Splits rectangles into sub-rectangles based on node weights,
+  /// trying to keep aspect ratios as close to 1:1 as possible.
   void _squarify(
     List<Treemap> nodes,
     Rect rect,
@@ -117,71 +137,80 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
   ) {
     if (nodes.isEmpty || rect.width <= 0 || rect.height <= 0) return;
 
+    // Base case: only one node → assign the entire rect
     if (nodes.length == 1) {
-      rectangleMap[nodes.first] = Rect.fromLTWH(
-        rect.left,
-        rect.top,
-        rect.width,
-        rect.height,
-      );
+      rectangleMap[nodes.first] = rect;
       return;
     }
 
     final horizontal = (rect.width / rect.height) >= 1.0;
+
+    // Sum of adjusted weights (ensuring min tile ratio)
     final sumWeights = nodes.fold(
       0.0,
       (sum, node) => sum + _adjustedWeight(node, rect),
     );
+
+    // Find optimal split index
     int splitIndex = _findBestSplit(nodes, rect, sumWeights);
 
+    // Split into two groups
     final firstGroup = nodes.sublist(0, splitIndex);
     final secondGroup = nodes.sublist(splitIndex);
+
+    // Weight of first group
     final double firstWeight = firstGroup.fold(
       0.0,
       (sum, node) => sum + _adjustedWeight(node, rect),
     );
+
     final double ratio = firstWeight / sumWeights;
 
+    // Split the current rectangle either horizontally or vertically
     Rect rect1, rect2;
-    double splitDimension;
     if (horizontal) {
-      splitDimension = rect.width * ratio;
-      splitDimension = min(splitDimension, rect.width);
-      splitDimension = min(splitDimension, rect.width);
-      rect1 = Rect.fromLTWH(rect.left, rect.top, splitDimension, rect.height);
+      double splitWidth = rect.width * ratio;
+      splitWidth = min(splitWidth, rect.width);
+      rect1 = Rect.fromLTWH(rect.left, rect.top, splitWidth, rect.height);
       rect2 = Rect.fromLTWH(
-        rect.left + splitDimension,
+        rect.left + splitWidth,
         rect.top,
-        rect.width - splitDimension,
+        rect.width - splitWidth,
         rect.height,
       );
     } else {
-      splitDimension = rect.height * ratio;
-      splitDimension = min(splitDimension, rect.height);
-      splitDimension = min(splitDimension, rect.height);
-      rect1 = Rect.fromLTWH(rect.left, rect.top, rect.width, splitDimension);
+      double splitHeight = rect.height * ratio;
+      splitHeight = min(splitHeight, rect.height);
+      rect1 = Rect.fromLTWH(rect.left, rect.top, rect.width, splitHeight);
       rect2 = Rect.fromLTWH(
         rect.left,
-        rect.top + splitDimension,
+        rect.top + splitHeight,
         rect.width,
-        rect.height - splitDimension,
+        rect.height - splitHeight,
       );
     }
 
+    // Recurse into sub-rectangles
     _squarify(firstGroup, rect1, rectangleMap);
     _squarify(secondGroup, rect2, rectangleMap);
   }
 
+  /// Returns adjusted weight for a node considering the minimum tile ratio.
   double _adjustedWeight(Treemap node, Rect rect) {
-    double investVal = node.value;
+    double investVal = node.value.abs();
     double rectArea = rect.width * rect.height;
     if (rectArea == 0) return investVal;
+
+    // Ensure node does not shrink below minimum ratio
     double minWeight = totalWeight * widget.minTileRatio;
     return max(investVal, minWeight);
   }
 
+  /// Finds the best index to split the node list
+  /// to minimize bad aspect ratios.
   int _findBestSplit(List<Treemap> nodes, Rect rect, double sumWeights) {
     if (nodes.length <= 2) return 1;
+
     final horizontal = (rect.width / rect.height) >= 1.0;
     int bestIndex = 1;
     double bestAspect = double.infinity;
@@ -189,6 +218,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
     for (int i = 1; i < nodes.length; i++) {
       final firstGroup = nodes.sublist(0, i);
       final secondGroup = nodes.sublist(i);
+
       final firstWeight = firstGroup.fold(
         0.0,
         (sum, node) => sum + _adjustedWeight(node, rect),
@@ -201,18 +231,20 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
       double splitDimension = horizontal
           ? rect.width * (firstWeight / sumWeights)
           : rect.height * (firstWeight / sumWeights);
-      if (splitDimension < 0) {
-        continue;
-      }
+
+      // Skip invalid splits
+      if (splitDimension < 0) continue;
       if ((rect.width - splitDimension) < 0 &&
           (rect.height - splitDimension) < 0) {
         continue;
       }
 
+      // Evaluate aspect ratios
       final aspect1 = _aspectRatio(firstWeight, rect, sumWeights, horizontal);
       final aspect2 = _aspectRatio(secondWeight, rect, sumWeights, horizontal);
       final worstAspect = max(aspect1, aspect2);
 
+      // Apply slight penalty for uneven splits
       double penalty = horizontal
           ? (i / nodes.length)
           : ((nodes.length - i) / nodes.length);
@@ -227,6 +259,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
     return bestIndex;
   }
 
+  /// Computes aspect ratio of a group’s rectangle relative to treemap.
   double _aspectRatio(
     double groupWeight,
     Rect rect,
@@ -234,16 +267,35 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
     bool horizontal,
   ) {
     if (groupWeight == 0 || totalWeight == 0) return double.infinity;
+
     final areaRatio = groupWeight / totalWeight;
     double length = horizontal
         ? rect.width * areaRatio
         : rect.height * areaRatio;
     double breadth = horizontal ? rect.height : rect.width;
+
     if (length == 0 || breadth == 0) return double.infinity;
+
     double aspect = max(length / breadth, breadth / length);
+
+    // Penalize extreme aspect ratios more heavily
     return aspect * (aspect > 2 ? 1.5 : 1.0);
   }
 
+  /// Utility to measure text height for overflow checks.
+  double _measureTextHeight(TextStyle style) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: "Np", style: style),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return textPainter.size.height;
+  }
+
+  /// Builds a single treemap tile.
+  ///
+  /// If [tileBuilder] is provided, it is used. Otherwise, a
+  /// default container with label and value text is drawn.
   Widget _buildTile({
     required Treemap node,
     required Rect rect,
@@ -259,23 +311,11 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
         child: widget.tileBuilder!(context, node, index, rect),
       );
     }
+
     double fontSize = min(rect.width, rect.height) * 0.3;
     fontSize = fontSize.clamp(6, 16);
 
-    double measureTextSize(
-      TextStyle style, {
-      int maxLines = 1,
-      double maxWidth = double.infinity,
-    }) {
-      final TextPainter textPainter = TextPainter(
-        text: TextSpan(text: "Np", style: style),
-        maxLines: maxLines,
-        textDirection: TextDirection.ltr,
-      )..layout();
-      return textPainter.size.height;
-    }
-
-    double labelHeight = measureTextSize(
+    double labelHeight = _measureTextHeight(
       widget.labelStyle ??
           TextStyle(
             fontSize: fontSize,
@@ -283,7 +323,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
             height: 1.2,
           ),
     );
-    double valueHeight = measureTextSize(
+    double valueHeight = _measureTextHeight(
       widget.valueStyle ??
           TextStyle(
             fontSize: fontSize,
@@ -291,6 +331,7 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
             height: 1.2,
           ),
     );
+
     return Container(
       width: rect.width,
       height: rect.height,
@@ -300,13 +341,14 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Show label if it fits in available height
           if (widget.showLabel &&
               (node.label != null) &&
               (labelHeight <
-                  (rect.height -
+                  rect.height -
                       widget.tilePadding.vertical -
                       (widget.border?.top.width ?? 0) -
-                      (widget.border?.bottom.width ?? 0))))
+                      (widget.border?.bottom.width ?? 0)))
             Text(
               node.label!,
               textAlign: TextAlign.center,
@@ -320,12 +362,14 @@ class _FlutterTreemapState extends State<FlutterTreemap> {
                     height: 1.2,
                   ),
             ),
+
+          // Show value if label + value fit in available height
           if (widget.showValue &&
               ((labelHeight + valueHeight) <
-                  (rect.height -
+                  rect.height -
                       widget.tilePadding.vertical -
                       (widget.border?.top.width ?? 0) -
-                      (widget.border?.bottom.width ?? 0))))
+                      (widget.border?.bottom.width ?? 0)))
             Text(
               node.value.toString(),
               textAlign: TextAlign.center,
