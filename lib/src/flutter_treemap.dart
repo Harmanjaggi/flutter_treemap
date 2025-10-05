@@ -59,16 +59,6 @@ class FlutterTreemap extends StatefulWidget {
 }
 
 class _FlutterTreemapState extends State<FlutterTreemap> {
-  /// Utility to measure text height for overflow checks.
-  double _measureTextHeight(TextStyle style) {
-    final TextPainter textPainter = TextPainter(
-      text: TextSpan(text: "Np", style: style),
-      maxLines: 1,
-      textDirection: TextDirection.ltr,
-    )..layout();
-    return textPainter.size.height;
-  }
-
   double totalWeight = 0;
 
   @override
