@@ -10,7 +10,7 @@ import 'package:flutter_treemap/src/treemap.dart';
 class FlutterTreemap extends StatefulWidget {
   final List<Treemap> nodes;
 
-  /// [minTileRatio] keep it from 0 to 1
+  /// [minTileRatio] keep it between 0 and 1
   final double minTileRatio;
   final bool showLabel;
   final bool showValue;
